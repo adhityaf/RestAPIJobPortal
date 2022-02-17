@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\SendApplicationRequest;
 
 class ApplicantApplicationController extends Controller
 {
@@ -25,8 +26,8 @@ class ApplicantApplicationController extends Controller
             ], 400);
         }
 
+        // get applicant application status
         $application = Application::getApplicantApplicationStatus($status);
-
         if($application->isEmpty()){
             return response()->json([
                 'status'    => 'Failed',
@@ -56,11 +57,9 @@ class ApplicantApplicationController extends Controller
         ], 200);
     }
 
-    /*
-        The app can send candidate’s job application to the company
-    */
-    public function sendApplication(Request $request, $slug){
-        $job = Job::where('slug', $slug)->first();
+    public function sendApplication(SendApplicationRequest $request, $slug){
+        // get data job
+        $job = Job::getJobBySlug($slug);
         if(!$job){
             return response()->json([
                 'status'    => 'Failed',
@@ -86,6 +85,7 @@ class ApplicantApplicationController extends Controller
             ], 404);
         }
         
+        // create new applicatian default status is sent
         $data = [
             'user_id' => Auth::id(),
             'job_id' => $job->id,

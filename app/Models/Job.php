@@ -36,7 +36,14 @@ class Job extends Model
         return $this->hasMany(Application::class);
     }
 
+    public static function getJobBySlug($slug){
+        return Job::where('slug', $slug)->first();
+    }
     public static function getJobBySlugAndStatusOpen($slug){
+        return Job::where('slug', $slug)->where('status', 'open')->first();
+    }
+
+    public static function getJobByUserIdSlugAndStatusOpen($slug){
         return Job::where('user_id', Auth::id())->where('slug', $slug)->where('status', 'open')->first();
     }
 

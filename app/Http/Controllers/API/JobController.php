@@ -6,10 +6,10 @@ use App\Models\Job;
 use App\Models\Category;
 use App\Models\Location;
 use Illuminate\Support\Str;
-use Illuminate\Http\Request;
-use App\Http\Requests\JobRequest;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\StoreJobRequest;
+use App\Http\Requests\UpdateJobRequest;
 
 class JobController extends Controller
 {
@@ -95,7 +95,7 @@ class JobController extends Controller
         Scopes point 2
         The app can manage company job vacancies
     */
-    public function store(JobRequest $request){
+    public function store(StoreJobRequest $request){
         $createdJob = Job::create([
             'user_id'       => Auth::user()->id,
             'location_id'   => $request->location_id,
@@ -139,7 +139,7 @@ class JobController extends Controller
         Scopes point 2
         The app can manage company job vacancies
     */
-    public function update(JobRequest $request, $slug){
+    public function update(UpdateJobRequest $request, $slug){
         $isJobExist = Job::where('slug', $slug)->first();
         $job = Job::where('user_id', Auth::id())->where('slug', $slug)->first();
 
@@ -169,7 +169,7 @@ class JobController extends Controller
         ];
 
         Job::where('user_id', Auth::id())->where('slug', $slug)->update($data);
-
+        
         return response()->json([
             'status'    => 'Success',
             'message'   => 'Update data successfully',

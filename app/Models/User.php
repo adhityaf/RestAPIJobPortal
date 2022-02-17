@@ -49,4 +49,8 @@ class User extends Authenticatable
     {
         return $this->hasMany(Application::class);
     }
+
+    public static function getEmail($email){
+        return User::where('email', $email)->first();
+    }
 }

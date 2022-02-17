@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\User;
-use Illuminate\Http\Request;
+use App\Http\Requests\LoginRequest;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Requests\RegisterRequest;
 
 /*
     Scopes poin 1
@@ -14,9 +15,8 @@ use Illuminate\Support\Facades\Hash;
 */
 class AuthController extends Controller
 {
-    public function login(Request $request){
-        
-        $user = User::where('email', $request->email)->first();
+    public function login(LoginRequest $request){
+        $user = User::getEmail($request->email);
         
         // if email and password are not match
         if(!$user || !Hash::check($request->password, $user->password)){
@@ -38,8 +38,8 @@ class AuthController extends Controller
         ], 200);
     }
 
-    public function register(Request $request){
-        $email = User::where('email', $request->email)->first();
+    public function register(RegisterRequest $request){
+        $email = User::getEmail($request->email);
 
         // if user is already registered
         if($email){
@@ -83,6 +83,7 @@ class AuthController extends Controller
         // get data authenticated user
         $user = Auth::user();
         
+        // if user not authenticated
         if(!$user){
             return response()->json([
                 'status'    => 'Failed',
@@ -92,6 +93,7 @@ class AuthController extends Controller
 
         // delete token autehenticated user
         $user->currentAccessToken()->delete();
+
         return response()->json([
             'status'    => 'Success',
             'message'   => 'Logout successfully',

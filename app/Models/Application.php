@@ -45,4 +45,21 @@ class Application extends Model
     public static function getApplicationByUserIdAndJobId($id){
         return Application::where('user_id', Auth::id())->where('job_id', $id)->first();
     }
+
+    public static function getApplicationMessage($status, $jobTitle){
+        if($status == 'sent'){
+            $message = "Retrieve data with status ". $status . " and job title is " . $jobTitle . " successfully";
+        }elseif($status == 'interview'){
+            $message = "Retrieve data with status ". $status . " and job title is " . $jobTitle . " successfully";
+        }elseif($status == 'offered'){
+            $message = "Retrieve data with status ". $status . " and job title is " . $jobTitle . " successfully";
+        }elseif($status == 'hired'){
+            $message = "Retrieve data with status ". $status . " and job title is " . $jobTitle . " successfully";
+        }elseif($status == 'unsuitable'){
+            $message = "Retrieve data with status ". $status . " and job title is " . $jobTitle . " successfully";
+        }elseif(!$status){
+            $message = "Retrieve all data with job title is " . $jobTitle . " successfully";
+        }
+        return $message;
+    }
 }

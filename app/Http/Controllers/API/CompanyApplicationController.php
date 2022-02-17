@@ -4,9 +4,10 @@ namespace App\Http\Controllers\API;
 
 use App\Models\Job;
 use App\Models\Application;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Events\NotifyApplicationStatusChange;
+use App\Http\Requests\ChangeApplicationStatusRequest;
 
 class CompanyApplicationController extends Controller
 {
@@ -22,10 +23,10 @@ class CompanyApplicationController extends Controller
             ], 400);
         }
         
-        $job = Job::getJobBySlugAndStatusOpen($slug);
-        // dd($slug, $job->id);
+        $job = Job::getJobByUserIdSlugAndStatusOpen($slug);
+        
+        // get company job vacancy based on status
         $applications = Application::getCompanyApplicationStatus($status, $job->id);
-
         if($applications->isEmpty()){
             return response()->json([
                 'status'    => 'Failed',
@@ -34,19 +35,7 @@ class CompanyApplicationController extends Controller
         }
         
         // available status 'sent', 'interview', 'offered', 'hired', 'unsuitable'
-        if($status == 'sent'){
-            $message = "Retrieve data with status 'sent' and job title is " .$job->title . " successfully";
-        }elseif($status == 'interview'){
-            $message = "Retrieve data with status 'interview' and job title is " .$job->title . " successfully";
-        }elseif($status == 'offered'){
-            $message = "Retrieve data with status 'offered' and job title is " .$job->title . " successfully";
-        }elseif($status == 'hired'){
-            $message = "Retrieve data with status 'hired' and job title is " .$job->title . " successfully";
-        }elseif($status == 'unsuitable'){
-            $message = "Retrieve data with status 'unsuitable' and job title is " .$job->title . " successfully";
-        }elseif(!$status){
-            $message = "Retrieve all data with job title is " .$job->title . " successfully";
-        }
+        $message = Application::getApplicationMessage($status, $job->title);
 
         return response()->json([
             'status'    => 'Success',
@@ -55,87 +44,40 @@ class CompanyApplicationController extends Controller
         ], 200);
     }
 
-    public function changeStatusToInterview($slug, $id){
-        $job = Job::where('slug', $slug)->where('status', 'open')->first();
+    public function changeApplicationStatus($slug, $id, ChangeApplicationStatusRequest $request){
+        // is job vacancy still available
+        $job = Job::getJobBySlugAndStatusOpen($slug);
         if(!$job){
             return response()->json([
                 'status'    => 'Failed',
-                'message'   => 'Data is empty',
+                'message'   => 'Job is not available',
             ], 404);
         }
 
+        // if applicant applied for the job
+        $applicant = Application::where('user_id', $id)->where('job_id', $job->id)->first();
+        if(!$applicant){
+            return response()->json([
+                'status'    => 'Failed',
+                'message'   => 'This applicant do not apply for this job',
+            ], 404);
+        }
+
+        // change status application
         $data = [
-            'status' => 'interview',
+            'status' => $request->status,
         ];
-        $application = Application::where('user_id', $id)->where('job_id', $job->id)->update($data);
+        Application::where('user_id', $id)->where('job_id', $job->id)->update($data);
+        
+        // send notification
+        NotifyApplicationStatusChange::dispatch('application status has change', Auth::user()->name, $request->status, $job->title);
+        
+        $applicant = Application::where('user_id', $id)->where('job_id', $job->id)->first();
 
         return response()->json([
             'status'    => 'Success',
             'message'   => 'Successfully update status application to interview',
-            'data'      => $application
-        ], 200);
-    }
-
-    public function changeStatusToOffered($slug, $id){
-        $job = Job::where('slug', $slug)->where('status', 'open')->first();
-        if(!$job){
-            return response()->json([
-                'status'    => 'Failed',
-                'message'   => 'Data is empty',
-            ], 404);
-        }
-
-        $data = [
-            'status' => 'offered',
-        ];
-        $application = Application::where('user_id', $id)->where('job_id', $job->id)->update($data);
-        
-        return response()->json([
-            'status'    => 'Success',
-            'message'   => 'Successfully update status application to offered',
-            'data'      => $application
-        ], 200);
-    }
-
-    public function changeStatusToHired($slug, $id){
-        $job = Job::where('slug', $slug)->where('status', 'open')->first();
-        if(!$job){
-            return response()->json([
-                'status'    => 'Failed',
-                'message'   => 'Data is empty',
-            ], 404);
-        }
-
-        $data = [
-            'status' => 'hired',
-        ];
-        $application = Application::where('user_id', $id)->where('job_id', $job->id)->update($data);
-        
-        return response()->json([
-            'status'    => 'Success',
-            'message'   => 'Successfully update status application to hired',
-            'data'      => $application
-        ], 200);
-    }
-
-    public function changeStatusToUnsuitable($slug, $id){
-        $job = Job::where('slug', $slug)->where('status', 'open')->first();
-        if(!$job){
-            return response()->json([
-                'status'    => 'Failed',
-                'message'   => 'Data is empty',
-            ], 404);
-        }
-
-        $data = [
-            'status' => 'unsuitable',
-        ];
-        $application = Application::where('user_id', $id)->where('job_id', $job->id)->update($data);
-        
-        return response()->json([
-            'status'    => 'Success',
-            'message'   => 'Successfully update status application to unsuitable',
-            'data'      => $application
+            'data'      => $applicant
         ], 200);
     }
 }

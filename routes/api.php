@@ -17,20 +17,17 @@ use App\Http\Controllers\API\ApplicantApplicationController;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-// Can be access when user is authenticated
 Route::prefix('/v1.0')->group(function () {
+    // Can be access when user is authenticated
     Route::middleware(['auth:sanctum'])->group(function () {
-        // Can be access for applicant only 
         Route::middleware(['applicant'])->group(function () {
-
+            // Can be access for applicant only 
             Route::get('/applicants', [ApplicantApplicationController::class, 'index']);
             Route::post('/applicants/{slug}', [ApplicantApplicationController::class, 'sendApplication']);
-
         });
 
-        // Can be access for company only 
         Route::middleware(['company'])->group(function () {
-
+            // Can be access for company only 
             Route::post('/jobs', [JobController::class, 'store']);
             Route::put('/jobs/{slug}', [JobController::class, 'update']);
             Route::delete('/jobs/{slug}', [JobController::class, 'destroy']);
@@ -39,16 +36,7 @@ Route::prefix('/v1.0')->group(function () {
             Route::get('/companies/{slug}', [CompanyApplicationController::class, 'listApplicant']);
 
             // change status application
-            Route::patch('/companies/{slug}/interview/{id}', [CompanyApplicationController::class, 'changeStatusToInterview']);
-            Route::patch('/companies/{slug}/offered/{id}', [CompanyApplicationController::class, 'changeStatusToOffered']);
-            Route::patch('/companies/{slug}/hired/{id}', [CompanyApplicationController::class, 'changeStatusToHired']);
-            Route::patch('/companies/{slug}/unsuitable/{id}', [CompanyApplicationController::class, 'changeStatusToUnsuitable']);
-
-
-
-            // The app has review candidates page for the company
-            // Route::get('/companies/{id}', [CompanyApplicationController::class, 'checkApplication']);
-            // Route::patch('/companies/{id}', [CompanyApplicationController::class, 'changeStatusApplication']);
+            Route::patch('/companies/{slug}/status/{id}', [CompanyApplicationController::class, 'changeApplicationStatus']);
         });
 
         Route::get('/logout', [AuthController::class, 'logout']);
