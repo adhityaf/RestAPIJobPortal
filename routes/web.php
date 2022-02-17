@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Job;
+use App\Models\Application;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,6 +15,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/notifications/{slug}/status/{id}', function ($slug, $id) {
+    $job = Job::getJobBySlugAndStatusOpen($slug);
+    $application = Application::where('user_id', $id)->where('job_id', $job->id)->first();
+
+    return view('notification', compact('job', 'application'));
+})->name('notification');

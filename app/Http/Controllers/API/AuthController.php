@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Models\User;
 use App\Http\Requests\LoginRequest;
+use App\Models\PersonalAccessToken;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -16,6 +17,15 @@ use App\Http\Requests\RegisterRequest;
 class AuthController extends Controller
 {
     public function login(LoginRequest $request){
+        // if already login
+        $tokenExist = PersonalAccessToken::where('name', $request->email)->first();
+        if($tokenExist){
+            return response()->json([
+                'status'    => 'Failed',
+                'message'   => 'You already login'
+            ], 401);
+        }
+
         $user = User::getEmail($request->email);
         
         // if email and password are not match
@@ -45,7 +55,7 @@ class AuthController extends Controller
         if($email){
             return response()->json([
                 'status'    => 'Failed',
-                'message'   => 'User is already registered',
+                'message'   => 'User has already been registered',
             ], 400);
         }
 

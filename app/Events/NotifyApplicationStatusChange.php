@@ -13,22 +13,24 @@ use Illuminate\Queue\SerializesModels;
 class NotifyApplicationStatusChange
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
-
+    
+    public $message;
     public $name;
     public $status;
-    public $position;
+    // public $position;
 
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct($name, $status, $position)
+    public function __construct($message, $name, $status)
     {
+		// $this->message  = "Company {$name} change your application to {$status} as {$position}";
+		$this->message  = $message;
         $this->name = $name;
         $this->status = $status;
-        $this->position = $position;
-		$this->message  = "Company {$name} change your application to {$status} as {$position}";
+        // $this->position = $position;
     }
 
     /**
@@ -38,6 +40,6 @@ class NotifyApplicationStatusChange
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('notify-application-status-change-to');
+        return new PrivateChannel('notify-application-status-change-to-',  $this->status);
     }
 }

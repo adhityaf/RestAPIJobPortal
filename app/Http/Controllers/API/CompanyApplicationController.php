@@ -24,13 +24,19 @@ class CompanyApplicationController extends Controller
         }
         
         $job = Job::getJobByUserIdSlugAndStatusOpen($slug);
+        if(!$job){
+            return response()->json([
+                'status'    => 'Failed',
+                'message'   => 'You can not view this data',
+            ], 404);
+        }
         
         // get company job vacancy based on status
         $applications = Application::getCompanyApplicationStatus($status, $job->id);
         if($applications->isEmpty()){
             return response()->json([
                 'status'    => 'Failed',
-                'message'   => 'Data is empty',
+                'message'   => 'There is no applicant yet',
             ], 404);
         }
         
@@ -61,6 +67,22 @@ class CompanyApplicationController extends Controller
                 'status'    => 'Failed',
                 'message'   => 'This applicant do not apply for this job',
             ], 404);
+        }
+
+        $job = Job::getJobByUserIdSlugAndStatusOpen($slug);
+        if(!$job){
+            return response()->json([
+                'status'    => 'Failed',
+                'message'   => 'You can not change this job vacancy status',
+            ], 401);
+        }
+
+
+        if($applicant->status == $request->status){
+            return response()->json([
+                'status'    => 'Failed',
+                'message'   => 'You can not change with same status',
+            ], 400);
         }
 
         // change status application
